@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rekapitulasi Pembayaran - SMP Mangun Jaya 01</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .sidebar {
+            background-color: #2c3e50;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .status-lunas {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-belum {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-keluar {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .summary-card {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .summary-card .card-body {
+            padding: 15px;
+        }
+        
+        .summary-card h5 {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+        
+        .summary-card .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+        
+        .logo {
+            padding: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo img {
+            max-width: 80%;
+            height: auto;
+        }
+        
+        .user-profile {
+            text-align: center;
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+        }
+        
+        .user-profile img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            padding-left: 40px;
+            border-radius: 20px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        
+        /* Tambahan untuk DataTables */
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 20px;
+            padding-left: 30px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            position: relative;
+        }
+        
+        .dataTables_wrapper .dataTables_filter:before {
+            content: "\F52A";
+            font-family: "bootstrap-icons";
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="logo">
+                    <h4><i class="bi bi-cash-coin"></i> SMP Mangun Jaya 01</h4>
+                    <small class="text-muted">Sistem Administrasi Pembayaran</small>
+                </div>
+                
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#students" data-bs-toggle="tab">
+                            <i class="bi bi-people-fill"></i> Data Siswa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#payments" data-bs-toggle="tab">
+                            <i class="bi bi-wallet2"></i> Pembayaran
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#recap" data-bs-toggle="tab">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Rekapitulasi
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#arrears" data-bs-toggle="tab">
+                            <i class="bi bi-exclamation-triangle"></i> Tunggakan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reports" data-bs-toggle="tab">
+                            <i class="bi bi-graph-up"></i> Laporan
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#settings" data-bs-toggle="tab">
+                            <i class="bi bi-gear"></i> Pengaturan
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=random" alt="User">
+                    <h6>Administrator</h6>
+                    <small class="text-muted">Super Admin</small>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 ms-sm-auto main-content">
+                <div class="tab-content">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Dashboard</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <div class="btn-group me-2">
+                                    <button class="btn btn-sm btn-outline-secondary">Hari Ini</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Minggu Ini</button>
+                                    <button class="btn btn-sm btn-outline-secondary">Bulan Ini</button>
+                                </div>
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                                    <i class="bi bi-calendar"></i> Periode
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary Cards -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card summary-card">
+                                    <div class="card-body">
+                                        <h5>Total Siswa</h5>
+                                        <div class="amount" id="totalStudents">0</div>
+                                        <small class="text-muted">Tahun Ajaran 2024/2025</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card summary-card">
+                                    <div class="card-body">
+                                        <h5>Pembayaran Bulan Ini</h5>
+                                        <div class="amount" id="monthlyPayments">Rp 0</div>
+                                        <small class="text-muted">Dari 0 transaksi</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card summary-card">
+                                    <div class="card-body">
+                                        <h5>Tunggakan</h5>
+                                        <div class="amount" id="totalArrears">Rp 0</div>
+                                        <small class="text-muted">Dari 0 siswa</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card summary-card">
+                                    <div class="card-body">
+                                        <h5>SKL Terbit</h5>
+                                        <div class="amount" id="sklIssued">0</div>
+                                        <small class="text-muted">Dari 0 siswa kelas 9</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Payments -->
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Pembayaran Terakhir</h5>
+                                <a href="#payments" class="btn btn-sm btn-primary" data-bs-toggle="tab">Lihat Semua</a>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="recentPaymentsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Tanggal</th>
+                                                <th>Siswa</th>
+                                                <th>Kelas</th>
+                                                <th>Jenis</th>
+                                                <th>Nominal</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>15/05/2024</td>
+                                                <td>Andi Wijaya</td>
+                                                <td>7A</td>
+                                                <td>SPP</td>
+                                                <td>Rp 100.000</td>
+                                                <td><span class="badge status-lunas">Lunas</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>14/05/2024</td>
+                                                <td>Budi Santoso</td>
+                                                <td>8B</td>
+                                                <td>LKS-1</td>
+                                                <td>Rp 200.000</td>
+                                                <td><span class="badge status-lunas">Lunas</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>13/05/2024</td>
+                                                <td>Citra Dewi</td>
+                                                <td>9C</td>
+                                                <td>OSIS</td>
+                                                <td>Rp 100.000</td>
+                                                <td><span class="badge status-lunas">Lunas</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>12/05/2024</td>
+                                                <td>Dian Pratama</td>
+                                                <td>7B</td>
+                                                <td>SPP</td>
+                                                <td>Rp 100.000</td>
+                                                <td><span class="badge status-lunas">Lunas</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>11/05/2024</td>
+                                                <td>Eka Putri</td>
+                                                <td>8A</td>
+                                                <td>LKS-2</td>
+                                                <td>Rp 200.000</td>
+                                                <td><span class="badge status-lunas">Lunas</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Arrears Warning -->
+                        <div class="card mt-4">
+                            <div class="card-header bg-warning text-white">
+                                <h5><i class="bi bi-exclamation-triangle"></i> Peringatan Tunggakan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="arrearsWarningTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Siswa</th>
+                                                <th>Kelas</th>
+                                                <th>Jenis Tunggakan</th>
+                                                <th>Nominal</th>
+                                                <th>Triwulan</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>Fajar Nugraha</td>
+                                                <td>7C</td>
+                                                <td>SPP</td>
+                                                <td>Rp 300.000</td>
+                                                <td>2</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Gita Maharani</td>
+                                                <td>8C</td>
+                                                <td>LKS-1</td>
+                                                <td>Rp 200.000</td>
+                                                <td>1</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Hendra Kurniawan</td>
+                                                <td>9A</td>
+                                                <td>OSIS</td>
+                                                <td>Rp 100.000</td>
+                                                <td>3</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Tab -->
+                    <div class="tab-pane fade" id="students">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Data Siswa</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <button class="btn btn-sm btn-primary me-2" id="addStudentBtn" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                                    <i class="bi bi-plus-circle"></i> Tambah Siswa
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-upload"></i> Import
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="search-box">
+                            <i class="bi bi-search"></i>
+                            <input type="text" class="form-control" id="studentSearch" placeholder="Cari siswa...">
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5>Daftar Siswa</h5>
+                                <div>
+                                    <select class="form-select form-select-sm" id="filterStudentClass" style="width: auto; display: inline-block;">
+                                        <option value="all">Semua Kelas</option>
+                                        <option value="7">Kelas 7</option>
+                                        <option value="8">Kelas 8</option>
+                                        <option value="9">Kelas 9</option>
+                                    </select>
+                                    <select class="form-select form-select-sm" id="filterStudentStatus" style="width: auto; display: inline-block;">
+                                        <option value="all">Semua Status</option>
+                                        <option value="active">Aktif</option>
+                                        <option value="inactive">Tidak Aktif</option>
+                                        <option value="graduate">Lulus</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="studentTable">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>NIS</th>
+                                                <th>Nama</th>
+                                                <th>Kelas</th>
+                                                <th>Tahun Ajaran</th>
+                                                <th>Status</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>202407001</td>
+                                                <td>Andi Wijaya</td>
+                                                <td>7A</td>
+                                                <td>2024/2025</td>
+                                                <td><span class="badge bg-success">Aktif</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>202408001</td>
+                                                <td>Budi Santoso</td>
+                                                <td>8B</td>
+                                                <td>2024/2025</td>
+                                                <td><span class="badge bg-success">Aktif</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>202409001</td>
+                                                <td>Citra Dewi</td>
+                                                <td>9C</td>
+                                                <td>2024/2025</td>
+                                                <td><span class="badge bg-success">Aktif</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td>202407002</td>
+                                                <td>Dian Pratama</td>
+                                                <td>7B</td>
+                                                <td>2024/2025</td>
+                                                <td><span class="badge bg-success">Aktif</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>5</td>
+                                                <td>202408002</td>
+                                                <td>Eka Putri</td>
+                                                <td>8A</td>
+                                                <td>2024/2025</td>
+                                                <td><span class="badge bg-success">Aktif</span></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                    <button class="btn btn-sm btn-warning"><i class="bi bi-pencil"></i></button>
+                                                    <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payments Tab -->
+                    <div class="tab-pane fade" id="payments">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Pembayaran</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <button class="btn btn-sm btn-primary me-2" id="addPaymentBtn" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                                    <i class="bi bi-plus-circle"></i> Input Pembayaran
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-printer"></i> Cetak Kwitansi
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Input Pembayaran</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="paymentForm">
+                                            <div class="mb-3">
+                                                <label class="form-label">Tanggal</label>
+                                                <input type="date" class="form-control" id="paymentDate" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">NIS Siswa</label>
+                                                <input type="text" class="form-control" id="studentNIS" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Jenis Pembayaran</label>
+                                                <select class="form-select" id="paymentType" required>
+                                                    <option value="">Pilih Jenis</option>
+                                                    <option value="PPDB">PPDB</option>
+                                                    <option value="LKS1">LKS-1</option>
+                                                    <option value="LKS2">LKS-2</option>
+                                                    <option value="OSIS">OSIS</option>
+                                                    <option value="SPP">SPP</option>
+                                                    <option value="RAPOR">Rapor</option>
+                                                    <option value="UTS1">UTS-1</option>
+                                                    <option value="UTS2">UTS-2</option>
+                                                    <option value="PAS1">PAS-1</option>
+                                                    <option value="PAT">PAT</option>
+                                                    <option value="UAT">UAT</option>
+                                                    <option value="ADM_DU">ADM.DU</option>
+                                                    <option value="DAFTAR_ULANG">Daftar Ulang</option>
+                                                    <option value="UANG_AKHIR_TAHUN">Uang Akhir Tahun</option>
+                                                    <option value="SKL">SKL</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nominal</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Rp</span>
+                                                    <input type="number" class="form-control" id="paymentAmount" required>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Triwulan</label>
+                                                <select class="form-select" id="paymentTriwulan" required>
+                                                    <option value="1">Triwulan 1</option>
+                                                    <option value="2">Triwulan 2</option>
+                                                    <option value="3">Triwulan 3</option>
+                                                    <option value="4">Triwulan 4</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Tahun Ajaran</label>
+                                                <input type="text" class="form-control" id="paymentYear" value="2024/2025" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Keterangan</label>
+                                                <textarea class="form-control" id="paymentNote" rows="2"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="bi bi-save"></i> Simpan Pembayaran
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5>Riwayat Pembayaran</h5>
+                                        <div>
+                                            <select class="form-select form-select-sm" id="filterPaymentClass" style="width: auto; display: inline-block;">
+                                                <option value="all">Semua Kelas</option>
+                                                <option value="7">Kelas 7</option>
+                                                <option value="8">Kelas 8</option>
+                                                <option value="9">Kelas 9</option>
+                                            </select>
+                                            <select class="form-select form-select-sm" id="filterPaymentType" style="width: auto; display: inline-block;">
+                                                <option value="all">Semua Jenis</option>
+                                                <option value="SPP">SPP</option>
+                                                <option value="LKS1">LKS-1</option>
+                                                <option value="LKS2">LKS-2</option>
+                                                <option value="OSIS">OSIS</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover" id="paymentTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Tanggal</th>
+                                                        <th>Siswa</th>
+                                                        <th>Kelas</th>
+                                                        <th>Jenis</th>
+                                                        <th>Nominal</th>
+                                                        <th>Status</th>
+                                                        <th>Aksi</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>15/05/2024</td>
+                                                        <td>Andi Wijaya</td>
+                                                        <td>7A</td>
+                                                        <td>SPP</td>
+                                                        <td>Rp 100.000</td>
+                                                        <td><span class="badge status-lunas">Lunas</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>14/05/2024</td>
+                                                        <td>Budi Santoso</td>
+                                                        <td>8B</td>
+                                                        <td>LKS-1</td>
+                                                        <td>Rp 200.000</td>
+                                                        <td><span class="badge status-lunas">Lunas</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>13/05/2024</td>
+                                                        <td>Citra Dewi</td>
+                                                        <td>9C</td>
+                                                        <td>OSIS</td>
+                                                        <td>Rp 100.000</td>
+                                                        <td><span class="badge status-lunas">Lunas</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>12/05/2024</td>
+                                                        <td>Dian Pratama</td>
+                                                        <td>7B</td>
+                                                        <td>SPP</td>
+                                                        <td>Rp 100.000</td>
+                                                        <td><span class="badge status-lunas">Lunas</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>11/05/2024</td>
+                                                        <td>Eka Putri</td>
+                                                        <td>8A</td>
+                                                        <td>LKS-2</td>
+                                                        <td>Rp 200.000</td>
+                                                        <td><span class="badge status-lunas">Lunas</span></td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></button>
+                                                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recap Tab -->
+                    <div class="tab-pane fade" id="recap">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Rekapitulasi Pembayaran</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <button class="btn btn-sm btn-success me-2" id="exportRecapBtn">
+                                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-printer"></i> Cetak
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <select class="form-select" id="recapClass">
+                                    <option value="7">Kelas 7</option>
+                                    <option value="8">Kelas 8</option>
+                                    <option value="9">Kelas 9</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="recapTriwulan">
+                                    <option value="1">Triwulan 1</option>
+                                    <option value="2">Triwulan 2</option>
+                                    <option value="3">Triwulan 3</option>
+                                    <option value="4">Triwulan 4</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="recapYear">
+                                    <option value="2024/2025">2024/2025</option>
+                                    <option value="2023/2024">2023/2024</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" id="generateRecapBtn">
+                                    <i class="bi bi-arrow-repeat"></i> Generate
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 id="recapTitle">Rekapitulasi Pembayaran Kelas 7 Triwulan 1 Tahun 2024/2025</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" id="recapTable">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th rowspan="2">No</th>
+                                                <th rowspan="2">Nama</th>
+                                                <th colspan="4" class="text-center">Jenis Pembayaran</th>
+                                                <th rowspan="2">Total</th>
+                                                <th rowspan="2">Keterangan</th>
+                                            </tr>
+                                            <tr>
+                                                <th>PPDB</th>
+                                                <th>LKS-1</th>
+                                                <th>LKS-2</th>
+                                                <th>OSIS</th>
+                                                <th>SPP</th>
+                                                <th>RAPOR</th>
+                                                <th>UTS-1</th>
+                                                <th>UTS-2</th>
+                                                <th>PAS-1</th>
+                                                <th>PAS-2</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>Andi Wijaya</td>
+                                                <td>510.000</td>
+                                                <td>200.000</td>
+                                                <td>200.000</td>
+                                                <td>100.000</td>
+                                                <td>300.000</td>
+                                                <td>1.310.000</td>
+                                                <td>Lunas</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>Budi Santoso</td>
+                                                <td>510.000</td>
+                                                <td>200.000</td>
+                                                <td>-</td>
+                                                <td>100.000</td>
+                                                <td>300.000</td>
+                                                <td>1.110.000</td>
+                                                <td>Belum LKS-2</td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>Citra Dewi</td>
+                                                <td>510.000</td>
+                                                <td>200.000</td>
+                                                <td>200.000</td>
+                                                <td>-</td>
+                                                <td>300.000</td>
+                                                <td>1.210.000</td>
+                                                <td>Belum OSIS</td>
+                                            </tr>
+                                            <tr>
+                                                <td>4</td>
+                                                <td>Dian Pratama</td>
+                                                <td>510.000</td>
+                                                <td>200.000</td>
+                                                <td>200.000</td>
+                                                <td>100.000</td>
+                                                <td>-</td>
+                                                <td>1.010.000</td>
+                                                <td>Belum SPP</td>
+                                            </tr>
+                                            <tr>
+                                                <td>5</td>
+                                                <td>Eka Putri</td>
+                                                <td>510.000</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>510.000</td>
+                                                <td>Belum lainnya</td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <th colspan="2">JUMLAH</th>
+                                                <th id="totalPPDB">2.550.000</th>
+                                                <th id="totalLKS1">800.000</th>
+                                                <th id="totalLKS2">600.000</th>
+                                                <th id="totalOSIS">300.000</th>
+                                                <th id="totalSPP">900.000</th>
+                                                <th id="grandTotal">5.150.000</th>
+                                                <th></th>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Arrears Tab -->
+                    <div class="tab-pane fade" id="arrears">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Daftar Tunggakan</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <button class="btn btn-sm btn-warning me-2" id="sendReminderBtn">
+                                    <i class="bi bi-envelope"></i> Kirim Peringatan
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-printer"></i> Cetak Daftar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <select class="form-select" id="arrearsClass">
+                                    <option value="all">Semua Kelas</option>
+                                    <option value="7">Kelas 7</option>
+                                    <option value="8">Kelas 8</option>
+                                    <option value="9">Kelas 9</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="arrearsType">
+                                    <option value="all">Semua Jenis</option>
+                                    <option value="SPP">SPP</option>
+                                    <option value="LKS1">LKS-1</option>
+                                    <option value="LKS2">LKS-2</option>
+                                    <option value="OSIS">OSIS</option>
+                                    <option value="PAS1">PAS-1</option>
+                                    <option value="PAS2">PAS-2</option>
+                                    <option value="UTS1">UTS-1</option>
+                                    <option value="UTS2">UTS-2</option>
+                                    <option value="RAPOR">RAPOR</option>
+                                    <option value="UAT">UAT</option>
+                                    <option value="ADM_DU">Adm.DU</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100" id="filterArrearsBtn">
+                                    <i class="bi bi-funnel"></i> Filter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Daftar Siswa dengan Tunggakan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="arrearsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Nama</th>
+                                                <th>Kelas</th>
+                                                <th>Jenis Tunggakan</th>
+                                                <th>Nominal</th>
+                                                <th>Triwulan</th>
+                                                <th>Tahun</th>
+                                                <th>Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>1</td>
+                                                <td>Andi Wijaya</td>
+                                                <td>7A</td>
+                                                <td>LKS-2</td>
+                                                <td>200.000</td>
+                                                <td>1</td>
+                                                <td>2024/2025</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>2</td>
+                                                <td>Budi Santoso</td>
+                                                <td>8B</td>
+                                                <td>OSIS</td>
+                                                <td>100.000</td>
+                                                <td>2</td>
+                                                <td>2024/2025</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td>3</td>
+                                                <td>Citra Dewi</td>
+                                                <td>9C</td>
+                                                <td>SPP</td>
+                                                <td>300.000</td>
+                                                <td>3</td>
+                                                <td>2024/2025</td>
+                                                <td><button class="btn btn-sm btn-primary">Bayar</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reports Tab -->
+                    <div class="tab-pane fade" id="reports">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Laporan</h1>
+                            <div class="btn-toolbar mb-2 mb-md-0">
+                                <button class="btn btn-sm btn-success me-2">
+                                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-printer"></i> Cetak
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Statistik Pembayaran</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="paymentChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Persentase Tunggakan</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <canvas id="arrearsChart" height="300"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Laporan Tahunan</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h5>Total Penerimaan</h5>
+                                                <h3 id="annualTotal">Rp 12.450.000</h3>
+                                                <a href="#" class="btn btn-sm btn-outline-primary">Detail</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h5>Total Tunggakan</h5>
+                                                <h3 id="annualArrears">Rp 600.000</h3>
+                                                <a href="#" class="btn btn-sm btn-outline-danger">Detail</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-body text-center">
+                                                <h5>Siswa Lunas</h5>
+                                                <h3 id="annualPaid">85%</h3>
+                                                <a href="#" class="btn btn-sm btn-outline-success">Detail</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Settings Tab -->
+                    <div class="tab-pane fade" id="settings">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                            <h1 class="h2">Pengaturan Sistem</h1>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Backup & Restore</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Backup Data</label>
+                                            <p class="text-muted">Buat cadangan seluruh data sistem</p>
+                                            <button class="btn btn-primary w-100" id="fullBackupBtn">
+                                                <i class="bi bi-download"></i> Backup Sekarang
+                                            </button>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Restore Data</label>
+                                            <p class="text-muted">Pulihkan data dari backup sebelumnya</p>
+                                            <input type="file" class="form-control mb-2" id="restoreFile">
+                                            <button class="btn btn-warning w-100" id="fullRestoreBtn">
+                                                <i class="bi bi-upload"></i> Restore Data
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Pengaturan Pembayaran</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="paymentSettingsForm">
+                                            <div class="mb-3">
+                                                <label class="form-label">Tahun Ajaran Aktif</label>
+                                                <input type="text" class="form-control" id="currentYear" value="2024/2025">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nominal Standar Pembayaran</label>
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">PPDB</label>
+                                                        <input type="number" class="form-control" id="ppdbAmount" value="510000">
+                                                    </div>
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">LKS-1</label>
+                                                        <input type="number" class="form-control" id="lks1Amount" value="200000">
+                                                    </div>
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">LKS-2</label>
+                                                        <input type="number" class="form-control" id="lks2Amount" value="200000">
+                                                    </div>
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">OSIS</label>
+                                                        <input type="number" class="form-control" id="osisAmount" value="100000">
+                                                    </div>
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">SPP (per bulan)</label>
+                                                        <input type="number" class="form-control" id="sppAmount" value="100000">
+                                                    </div>
+                                                    <div class="col-md-6 mb-2">
+                                                        <label class="form-label">Ujian Akhir</label>
+                                                        <input type="number" class="form-control" id="examAmount" value="150000">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <i class="bi bi-save"></i> Simpan Pengaturan
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Add Student -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Data Siswa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="studentForm">
+                        <div class="mb-3">
+                            <label class="form-label">NIS</label>
+                            <input type="text" class="form-control" id="studentNIS" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="studentName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kelas</label>
+                            <select class="form-select" id="studentClass" required>
+                                <option value="7">Kelas 7</option>
+                                <option value="8">Kelas 8</option>
+                                <option value="9">Kelas 9</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tahun Ajaran</label>
+                            <input type="text" class="form-control" id="studentYear" value="2024/2025" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="studentStatus" required>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Tidak Aktif</option>
+                                <option value="graduate">Lulus</option>
+                            </select>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Simpan Data Siswa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Add Payment -->
+    <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Input Pembayaran Baru</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="paymentModalForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" id="modalPaymentDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">NIS Siswa</label>
+                            <input type="text" class="form-control" id="modalStudentNIS" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jenis Pembayaran</label>
+                            <select class="form-select" id="modalPaymentType" required>
+                                <option value="">Pilih Jenis</option>
+                                <option value="SPP">SPP</option>
+                                <option value="LKS1">LKS-1</option>
+                                <option value="LKS2">LKS-2</option>
+                                <option value="OSIS">OSIS</option>
+                                <option value="UTS1">UTS-1</option>
+                                <option value="UTS2">UTS-2</option>
+                                <option value="PAS1">PAS-1</option>
+                                <option value="PAS2">PAS-2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nominal</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control" id="modalPaymentAmount" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Triwulan</label>
+                            <select class="form-select" id="modalPaymentTriwulan">
+                                <option value="1">Triwulan 1</option>
+                                <option value="2">Triwulan 2</option>
+                                <option value="3">Triwulan 3</option>
+                                <option value="4">Triwulan 4</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Keterangan</label>
+                            <textarea class="form-control" id="modalPaymentNote" rows="2"></textarea>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Simpan Pembayaran
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Inisialisasi DataTables
+            $('#studentTable').DataTable();
+            $('#paymentTable').DataTable();
+            $('#arrearsTable').DataTable();
+            $('#recapTable').DataTable({
+                scrollX: true
+            });
+            $('#recentPaymentsTable').DataTable({
+                pageLength: 5,
+                lengthChange: false
+            });
+            $('#arrearsWarningTable').DataTable({
+                pageLength: 5,
+                lengthChange: false
+            });
+
+            // Inisialisasi chart
+            const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+            const paymentChart = new Chart(paymentCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'],
+                    datasets: [{
+                        label: 'Pembayaran (Rp)',
+                        data: [1200000, 1900000, 1500000, 1800000, 2200000, 2000000, 2100000, 2300000, 2000000, 2500000, 2400000, 2600000],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Pembayaran per Bulan'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const arrearsCtx = document.getElementById('arrearsChart').getContext('2d');
+            const arrearsChart = new Chart(arrearsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lunas', 'Tunggakan'],
+                    datasets: [{
+                        data: [85, 15],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 99, 132, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Persentase Pembayaran'
+                        }
+                    }
+                }
+            });
+
+            // Update summary cards
+            $('#totalStudents').text('125');
+            $('#monthlyPayments').text('Rp 2.300.000');
+            $('#totalArrears').text('Rp 600.000');
+            $('#sklIssued').text('42');
+
+            // Form submission handlers
+            $('#studentForm').on('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Sukses!',
+                    text: 'Data siswa berhasil disimpan',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    $('#addStudentModal').modal('hide');
+                    this.reset();
+                });
+            });
+
+            $('#paymentForm').on('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Sukses!',
+                    text: 'Pembayaran berhasil dicatat',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    this.reset();
+                });
+            });
+
+            $('#paymentSettingsForm').on('submit', function(e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Sukses!',
+                    text: 'Pengaturan berhasil disimpan',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            // Button actions
+            $('#generateRecapBtn').click(function() {
+                const kelas = $('#recapClass').val();
+                const triwulan = $('#recapTriwulan').val();
+                const tahun = $('#recapYear').val();
+                
+                $('#recapTitle').text(`Rekapitulasi Pembayaran Kelas ${kelas} Triwulan ${triwulan} Tahun ${tahun}`);
+                
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: `Rekapitulasi untuk Kelas ${kelas} Triwulan ${triwulan} telah digenerate`,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            $('#exportRecapBtn').click(function() {
+                Swal.fire({
+                    title: 'Export Data',
+                    text: 'Data rekapitulasi berhasil diexport ke Excel',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            $('#sendReminderBtn').click(function() {
+                Swal.fire({
+                    title: 'Peringatan Terkirim',
+                    text: 'Peringatan tunggakan telah dikirim ke orang tua/wali siswa',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+
+            // Filter buttons
+            $('#filterArrearsBtn').click(function() {
+                const kelas = $('#arrearsClass').val();
+                const jenis = $('#arrearsType').val();
+                
+                Swal.fire({
+                    title: 'Filter Diterapkan',
+                    text: `Menampilkan tunggakan untuk Kelas ${kelas === 'all' ? 'Semua' : kelas} dan Jenis ${jenis === 'all' ? 'Semua' : jenis}`,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
